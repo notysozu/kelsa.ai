@@ -1042,6 +1042,38 @@ function ensureAuthenticated() {
   return false;
 }
 
+function updateAuthState(user) {
+  authState.authenticated = Boolean(user);
+  authState.user = user || null;
+  setAuthUi();
+}
+
+function clearAuthForms() {
+  ['login-email', 'login-password', 'signup-name', 'signup-email', 'signup-password'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.value = '';
+  });
+}
+
+function resetChatWindow() {
+  const chatWindow = document.getElementById('chat-window');
+  chatWindow.innerHTML = `
+    <div class="chat-msg agent">
+      <div class="chat-avatar">⬡</div>
+      <div class="chat-bubble">Hey! I'm your AI career advisor — and unlike a generic chatbot, I actually remember your skills, projects, and applications. Ask me anything: "What should I focus on?", "Which skills am I missing for a data role?", "How's my interview pipeline looking?" — I'll answer based on what I know about you.</div>
+    </div>
+  `;
+}
+
+function handleUnauthorized(message = 'Your session expired. Please log in again.') {
+  updateAuthState(null);
+  clearAuthForms();
+  resetChatWindow();
+  navigate('auth');
+  showAuthPanel('login');
+  toast(message, 'error');
+}
+
 async function loginUser(btn) {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
@@ -1050,8 +1082,17 @@ async function loginUser(btn) {
     return;
   }
   setLoading(btn, true);
-  toast('Login UI is ready. Backend wiring happens in Step 7.', 'error');
-  setLoading(btn, false);
+  try {
+    const result = await api('/api/auth/login', 'POST', { email, password });
+    updateAuthState(result.user);
+    clearAuthForms();
+    navigate('dashboard');
+    toast(result.message || 'Logged in successfully.');
+  } catch (error) {
+    toast(error.message || 'Login failed.', 'error');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
 async function signupUser(btn) {
@@ -1063,16 +1104,31 @@ async function signupUser(btn) {
     return;
   }
   setLoading(btn, true);
-  toast('Signup UI is ready. Backend wiring happens in Step 7.', 'error');
-  setLoading(btn, false);
+  try {
+    const result = await api('/api/auth/signup', 'POST', { name, email, password });
+    updateAuthState(result.user);
+    clearAuthForms();
+    navigate('dashboard');
+    toast(result.message || 'Account created successfully.');
+  } catch (error) {
+    toast(error.message || 'Signup failed.', 'error');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
-function logoutUser() {
-  authState.authenticated = false;
-  authState.user = null;
-  setAuthUi();
-  navigate('auth');
-  toast('Logout button is in place. Real logout wiring lands in Step 7.');
+async function logoutUser() {
+  try {
+    const result = await api('/api/auth/logout', 'POST');
+    updateAuthState(null);
+    clearAuthForms();
+    resetChatWindow();
+    navigate('auth');
+    showAuthPanel('login');
+    toast(result.message || 'Logged out successfully.');
+  } catch (error) {
+    toast(error.message || 'Logout failed.', 'error');
+  }
 }
 
 // ── Toast ────────────────────────────────────────────────
@@ -1103,12 +1159,44 @@ function showResponse(boxId, textId, text) {
 }
 
 // ── API helper ────────────────────────────────────────────
-async function api(path, method = 'GET', body = null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+async function api(path, method = 'GET', body = null, options = {}) {
+  const opts = {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(path, opts);
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
+  let payload = null;
+  try {
+    payload = await res.json();
+  } catch (_) {
+    payload = null;
+  }
+
+  if (res.status === 401) {
+    if (!options.quietUnauthorized) {
+      handleUnauthorized(payload?.detail || 'Please log in to continue.');
+    }
+    throw new Error(payload?.detail || 'Authentication required.');
+  }
+
+  if (!res.ok) {
+    throw new Error(payload?.detail || `API error ${res.status}`);
+  }
+  return payload;
+}
+
+async function restoreSession() {
+  try {
+    const result = await api('/api/auth/me', 'GET', null, { quietUnauthorized: true });
+    updateAuthState(result.user);
+    navigate('dashboard');
+  } catch (_) {
+    updateAuthState(null);
+    navigate('auth');
+    showAuthPanel('login');
+  }
 }
 
 // ── SKILLS ───────────────────────────────────────────────
@@ -1273,6 +1361,7 @@ function addTypingIndicator() {
 // Set today's date on date picker
 document.getElementById('app-date').valueAsDate = new Date();
 setAuthUi();
+restoreSession();
 </script>
 </body>
 </html>
