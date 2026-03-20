@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CareerOS — AI Career Advisor</title>
+<title>kelsa.ai — Career Copilot</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -598,8 +598,8 @@
   <!-- ── Sidebar ── -->
   <nav class="sidebar">
     <div class="logo">
-      <div class="logo-mark">CareerOS</div>
-      <div class="logo-sub">AI Career Advisor</div>
+      <div class="logo-mark">kelsa.ai</div>
+      <div class="logo-sub">Career Copilot</div>
     </div>
     <div class="nav">
       <div class="nav-item active" data-panel="auth">
@@ -651,7 +651,7 @@
     <div class="panel active" id="panel-auth">
       <div class="page-header">
         <div class="page-title">Secure <span>Access</span></div>
-        <div class="page-desc">Create your account or sign in before using your saved career workspace.</div>
+        <div class="page-desc">Create your account or sign in before using your saved kelsa.ai workspace.</div>
       </div>
 
       <div class="auth-shell">
@@ -674,7 +674,7 @@
             <button class="btn btn-primary" onclick="loginUser(this)">
               <span>Log In</span>
             </button>
-            <div class="auth-note">Backend connection for this form will be wired in Step 7.</div>
+            <div class="auth-note">This form signs you in with a secure cookie-based session.</div>
           </div>
 
           <div class="auth-panel" id="auth-panel-signup">
@@ -694,7 +694,7 @@
             <button class="btn btn-primary" onclick="signupUser(this)">
               <span>Create Account</span>
             </button>
-            <div class="auth-note">Account creation will call the new FastAPI auth routes in Step 7.</div>
+            <div class="auth-note">New accounts get their own isolated memory timeline and workspace.</div>
           </div>
         </div>
 
@@ -714,7 +714,7 @@
               <div class="auth-feature-copy">All career features stay locked until you authenticate, which prevents accidental cross-user access.</div>
             </div>
           </div>
-          <div class="auth-note">The UI is ready. Session restoration and real submit behavior are next.</div>
+          <div class="auth-note">Sessions restore automatically when your cookie is still valid.</div>
         </div>
       </div>
     </div>
@@ -752,7 +752,7 @@
 
       <div class="card">
         <div class="card-title"><span class="card-title-icon">⬡</span> Memory-Powered Summary</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Your AI advisor synthesizes everything it knows about you from memory.</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">kelsa.ai synthesizes everything it knows about you from memory.</p>
         <button class="btn btn-primary" onclick="loadDashboard(this)">
           <span>Generate My Summary</span>
         </button>
@@ -957,7 +957,7 @@
         <div class="chat-window" id="chat-window">
           <div class="chat-msg agent">
             <div class="chat-avatar">⬡</div>
-            <div class="chat-bubble">Hey! I'm your AI career advisor — and unlike a generic chatbot, I actually remember your skills, projects, and applications. Ask me anything: "What should I focus on?", "Which skills am I missing for a data role?", "How's my interview pipeline looking?" — I'll answer based on what I know about you.</div>
+            <div class="chat-bubble">Hey! I'm kelsa.ai — and unlike a generic chatbot, I actually remember your skills, projects, and applications. Ask me anything: "What should I focus on?", "Which skills am I missing for a data role?", "How's my interview pipeline looking?" — I'll answer based on what I know about you.</div>
           </div>
         </div>
         <div class="chat-input-row">
@@ -1060,7 +1060,7 @@ function resetChatWindow() {
   chatWindow.innerHTML = `
     <div class="chat-msg agent">
       <div class="chat-avatar">⬡</div>
-      <div class="chat-bubble">Hey! I'm your AI career advisor — and unlike a generic chatbot, I actually remember your skills, projects, and applications. Ask me anything: "What should I focus on?", "Which skills am I missing for a data role?", "How's my interview pipeline looking?" — I'll answer based on what I know about you.</div>
+      <div class="chat-bubble">Hey! I'm kelsa.ai — and unlike a generic chatbot, I actually remember your skills, projects, and applications. Ask me anything: "What should I focus on?", "Which skills am I missing for a data role?", "How's my interview pipeline looking?" — I'll answer based on what I know about you.</div>
     </div>
   `;
 }

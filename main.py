@@ -1,5 +1,5 @@
 """
-AI Internship & Career Advisor backend.
+kelsa.ai backend.
 
 Runs with Hindsight when available, and falls back to a lightweight
 local JSON memory store so the app still works in a plain local setup.
@@ -32,10 +32,16 @@ MEMORY_FILE = BASE_DIR / "memory_store.json"
 USERS_FILE = BASE_DIR / "users.json"
 
 HINDSIGHT_BASE_URL = os.getenv("HINDSIGHT_BASE_URL", "https://api.hindsight.vectorize.io")
-HINDSIGHT_API_KEY = os.getenv("HINDSIGHT_API_KEY", "hsk_538ca0b5afd27305ff5bfcf1b9fccd26_af2d4435b1d25c5a")
+HINDSIGHT_API_KEY = os.getenv("HINDSIGHT_API_KEY", "")
 HINDSIGHT_ENABLED = os.getenv("HINDSIGHT_ENABLED", "").lower() in {"1", "true", "yes"}
+APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
+APP_PORT = int(os.getenv("APP_PORT", "8090"))
+APP_RELOAD = os.getenv("APP_RELOAD", "").lower() in {"1", "true", "yes"}
 SESSION_COOKIE_NAME = "kelsa_session"
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-only-change-me")
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "").lower() in {"1", "true", "yes"}
+SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "lax").lower()
+SESSION_COOKIE_MAX_AGE = int(os.getenv("SESSION_COOKIE_MAX_AGE", str(60 * 60 * 24 * 7)))
 BANK_ID = "career-advisor-bank"
 
 
@@ -218,7 +224,7 @@ if HINDSIGHT_ENABLED and Hindsight is not None:
         use_hindsight = False
 
 
-app = FastAPI(title="AI Career Advisor")
+app = FastAPI(title="kelsa.ai")
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 session_serializer = URLSafeSerializer(SESSION_SECRET, salt="kelsa-session")
 
@@ -228,6 +234,9 @@ async def startup() -> None:
     if not INDEX_FILE.exists():
         raise RuntimeError(f"Missing frontend file: {INDEX_FILE}")
 
+    if SESSION_SECRET == "dev-only-change-me":
+        print("Warning: SESSION_SECRET is using the default development value.")
+
     if not use_hindsight or client is None:
         print("Using local JSON memory store.")
         return
@@ -235,9 +244,9 @@ async def startup() -> None:
     try:
         client.create_bank(
             bank_id=BANK_ID,
-            name="Career Advisor",
+            name="kelsa.ai",
             mission=(
-                "You are a personalized AI career advisor for students and early-career professionals. "
+                "You are kelsa.ai, a personalized AI career copilot for students and early-career professionals. "
                 "Extract: skills learned with proficiency levels, projects built with tech stacks, "
                 "internship applications (company, role, status, date), interview outcomes, "
                 "certifications earned, goals stated by the user, feedback received on resume/profile. "
@@ -304,9 +313,9 @@ def set_session_cookie(response: Response, user_id: str) -> None:
         key=SESSION_COOKIE_NAME,
         value=create_session_token(user_id),
         httponly=True,
-        samesite="lax",
-        secure=False,
-        max_age=60 * 60 * 24 * 7,
+        samesite=SESSION_COOKIE_SAMESITE,
+        secure=SESSION_COOKIE_SECURE,
+        max_age=SESSION_COOKIE_MAX_AGE,
     )
 
 
@@ -715,7 +724,7 @@ def chat(chat_input: ChatInput, current_user: StoredUser = Depends(get_current_u
     answer = reflect(
         current_user,
         f"The user asked: '{chat_input.message}'. "
-        "Answer as a knowledgeable career advisor who knows this user's full history — "
+        "Answer as kelsa.ai, a knowledgeable career copilot who knows this user's full history — "
         "their skills, projects, applications, and goals. Be specific and personal, not generic."
     )
     return {"response": answer}
@@ -738,4 +747,4 @@ def dashboard(current_user: StoredUser = Depends(get_current_user)) -> dict[str,
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8090, reload=True)
+    uvicorn.run("main:app", host=APP_HOST, port=APP_PORT, reload=APP_RELOAD)
