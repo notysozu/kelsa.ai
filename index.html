@@ -630,7 +630,7 @@
       </button>
       <div class="memory-status">
         <div class="memory-dot"></div>
-        <span>Hindsight memory live</span>
+        <span id="memory-status-text">Checking memory mode…</span>
       </div>
     </div>
   </nav>
@@ -1035,6 +1035,20 @@ function setAuthUi() {
   });
 }
 
+async function loadRuntimeStatus() {
+  const memoryStatusText = document.getElementById('memory-status-text');
+  try {
+    const result = await api('/api/status', 'GET', null, { quietUnauthorized: true });
+    if (result.memory_mode === 'hindsight') {
+      memoryStatusText.textContent = 'Hindsight memory live';
+      return;
+    }
+    memoryStatusText.textContent = 'Local JSON memory mode';
+  } catch (_) {
+    memoryStatusText.textContent = 'Memory status unavailable';
+  }
+}
+
 function ensureAuthenticated() {
   if (authState.authenticated) return true;
   navigate('auth');
@@ -1074,11 +1088,27 @@ function handleUnauthorized(message = 'Your session expired. Please log in again
   toast(message, 'error');
 }
 
+function getApiErrorMessage(payload, statusCode) {
+  if (Array.isArray(payload?.detail)) {
+    return payload.detail
+      .map(item => item.msg || 'Invalid input')
+      .join('; ');
+  }
+  if (typeof payload?.detail === 'string') {
+    return payload.detail;
+  }
+  return `API error ${statusCode}`;
+}
+
 async function loginUser(btn) {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
   if (!email || !password) {
     toast('Enter your email and password.', 'error');
+    return;
+  }
+  if (password.length < 8) {
+    toast('Password must be at least 8 characters.', 'error');
     return;
   }
   setLoading(btn, true);
@@ -1101,6 +1131,14 @@ async function signupUser(btn) {
   const password = document.getElementById('signup-password').value.trim();
   if (!name || !email || !password) {
     toast('Fill in name, email, and password.', 'error');
+    return;
+  }
+  if (name.length < 2) {
+    toast('Name must be at least 2 characters.', 'error');
+    return;
+  }
+  if (password.length < 8) {
+    toast('Password must be at least 8 characters.', 'error');
     return;
   }
   setLoading(btn, true);
@@ -1182,7 +1220,7 @@ async function api(path, method = 'GET', body = null, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(payload?.detail || `API error ${res.status}`);
+    throw new Error(getApiErrorMessage(payload, res.status));
   }
   return payload;
 }
@@ -1361,6 +1399,7 @@ function addTypingIndicator() {
 // Set today's date on date picker
 document.getElementById('app-date').valueAsDate = new Date();
 setAuthUi();
+loadRuntimeStatus();
 restoreSession();
 </script>
 </body>

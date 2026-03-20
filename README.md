@@ -21,6 +21,7 @@ kelsa.ai is a FastAPI-based career copilot with a single-page frontend. It suppo
 - [requirements.txt](/home/sonukumar/Documents/projects/problem-statement-4/files/requirements.txt): Python dependencies
 - [`.env.example`](/home/sonukumar/Documents/projects/problem-statement-4/files/.env.example): sample environment config
 - [DEPLOYMENT.md](/home/sonukumar/Documents/projects/problem-statement-4/files/DEPLOYMENT.md): deployment-focused notes
+- [N8N_INTEGRATION.md](/home/sonukumar/Documents/projects/problem-statement-4/files/N8N_INTEGRATION.md): machine-to-machine workflow guide for n8n
 - `users.json`: local user store created at runtime
 - `memory_store.json`: local per-user memory store created at runtime
 
@@ -48,6 +49,8 @@ Available environment variables:
   Cookie same-site policy. Default is `lax`.
 - `SESSION_COOKIE_MAX_AGE`
   Session cookie lifetime in seconds.
+- `AUTOMATION_API_KEY`
+  Shared secret for machine-to-machine requests such as n8n.
 - `HINDSIGHT_ENABLED`
   Set to `true` to enable Hindsight. Default behavior is local JSON fallback mode.
 - `HINDSIGHT_BASE_URL`
@@ -65,6 +68,7 @@ APP_RELOAD=false
 SESSION_COOKIE_SECURE=false
 SESSION_COOKIE_SAMESITE=lax
 SESSION_COOKIE_MAX_AGE=604800
+AUTOMATION_API_KEY=replace-with-a-shared-secret-for-n8n
 HINDSIGHT_ENABLED=false
 HINDSIGHT_BASE_URL=https://api.hindsight.vectorize.io
 HINDSIGHT_API_KEY=
@@ -116,6 +120,19 @@ http://127.0.0.1:8090
 - On page refresh, the frontend tries to restore the session automatically
 - If the backend returns `401`, the frontend sends the user back to the login screen
 
+## n8n integration
+
+The app also supports machine-to-machine automation without browser cookies.
+
+- Set `AUTOMATION_API_KEY` in the app environment
+- Send `X-Automation-Key` in n8n HTTP Request nodes
+- Use `POST /api/n8n/memory` to store structured user data by email
+- Use `POST /api/n8n/applications` for direct application tracking
+- Use `POST /api/n8n/resume-analysis` for direct resume review
+- Use `POST /api/n8n/advisor` to send a prompt and get an advisor response for that user
+
+See [N8N_INTEGRATION.md](/home/sonukumar/Documents/projects/problem-statement-4/files/N8N_INTEGRATION.md) for example payloads and suggested workflow patterns.
+
 ## Data storage
 
 ### Local mode
@@ -133,6 +150,7 @@ When `HINDSIGHT_ENABLED=true` and valid Hindsight credentials are provided:
 - the app initializes a Hindsight bank
 - memory operations use Hindsight
 - user isolation is preserved using user-specific tags
+- n8n-triggered advisor prompts also use the same per-user Hindsight-scoped path
 
 ## Development notes
 
