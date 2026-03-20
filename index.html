@@ -451,6 +451,144 @@
     font-size: 13px;
   }
   .empty-state-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+
+  .nav-item.locked {
+    opacity: 0.55;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .auth-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(124,107,255,0.08);
+  }
+
+  .auth-status-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .auth-status-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: var(--font-mono);
+  }
+
+  .auth-status-value {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .hidden { display: none !important; }
+
+  .auth-shell {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+  }
+
+  .auth-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .auth-tabs {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface2);
+  }
+
+  .auth-tab {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .auth-tab.active {
+    color: var(--text);
+    background: rgba(124,107,255,0.14);
+  }
+
+  .auth-panel { display: none; }
+  .auth-panel.active { display: block; }
+
+  .auth-hero {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background:
+      radial-gradient(circle at top right, rgba(255,107,157,0.16), transparent 35%),
+      radial-gradient(circle at bottom left, rgba(107,255,212,0.14), transparent 30%),
+      var(--surface);
+  }
+
+  .auth-feature {
+    padding: 14px 0;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .auth-feature:first-of-type {
+    border-top: none;
+  }
+
+  .auth-feature-title {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .auth-feature-copy {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .auth-note {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+
+  .gate-banner {
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(251,191,36,0.2);
+    background: rgba(251,191,36,0.08);
+    color: #f6dea0;
+    font-size: 13px;
+  }
+
+  @media(max-width:960px) {
+    .auth-shell { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -464,26 +602,32 @@
       <div class="logo-sub">AI Career Advisor</div>
     </div>
     <div class="nav">
-      <div class="nav-item active" data-panel="dashboard">
+      <div class="nav-item active" data-panel="auth">
+        <span class="nav-icon">◉</span> Account
+      </div>
+      <div class="nav-item locked" data-panel="dashboard" data-requires-auth="true">
         <span class="nav-icon">⬡</span> Dashboard
       </div>
-      <div class="nav-item" data-panel="skills">
+      <div class="nav-item locked" data-panel="skills" data-requires-auth="true">
         <span class="nav-icon">⚡</span> Skills
       </div>
-      <div class="nav-item" data-panel="projects">
+      <div class="nav-item locked" data-panel="projects" data-requires-auth="true">
         <span class="nav-icon">◈</span> Projects
       </div>
-      <div class="nav-item" data-panel="applications">
+      <div class="nav-item locked" data-panel="applications" data-requires-auth="true">
         <span class="nav-icon">◎</span> Applications
       </div>
-      <div class="nav-item" data-panel="resume">
+      <div class="nav-item locked" data-panel="resume" data-requires-auth="true">
         <span class="nav-icon">◷</span> Resume Analysis
       </div>
-      <div class="nav-item" data-panel="chat">
+      <div class="nav-item locked" data-panel="chat" data-requires-auth="true">
         <span class="nav-icon">◬</span> AI Advisor
       </div>
     </div>
     <div class="sidebar-footer">
+      <button class="btn btn-ghost btn-sm hidden" id="logout-btn" onclick="logoutUser()">
+        <span>Log Out</span>
+      </button>
       <div class="memory-status">
         <div class="memory-dot"></div>
         <span>Hindsight memory live</span>
@@ -493,13 +637,95 @@
 
   <!-- ── Main ── -->
   <main class="main">
+    <div class="topbar">
+      <div class="auth-status">
+        <div class="memory-dot"></div>
+        <div class="auth-status-copy">
+          <div class="auth-status-label">Account Status</div>
+          <div class="auth-status-value" id="auth-status-text">Not logged in</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AUTH ── -->
+    <div class="panel active" id="panel-auth">
+      <div class="page-header">
+        <div class="page-title">Secure <span>Access</span></div>
+        <div class="page-desc">Create your account or sign in before using your saved career workspace.</div>
+      </div>
+
+      <div class="auth-shell">
+        <div class="card">
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="showAuthPanel('login')">Log In</button>
+            <button class="auth-tab" id="tab-signup" onclick="showAuthPanel('signup')">Sign Up</button>
+          </div>
+
+          <div class="auth-panel active" id="auth-panel-login">
+            <div class="card-title"><span class="card-title-icon">◉</span> Welcome back</div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="login-email" placeholder="you@example.com"/>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="login-password" placeholder="Enter your password"/>
+            </div>
+            <button class="btn btn-primary" onclick="loginUser(this)">
+              <span>Log In</span>
+            </button>
+            <div class="auth-note">Backend connection for this form will be wired in Step 7.</div>
+          </div>
+
+          <div class="auth-panel" id="auth-panel-signup">
+            <div class="card-title"><span class="card-title-icon">⬡</span> Create account</div>
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" id="signup-name" placeholder="Your full name"/>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="signup-email" placeholder="you@example.com"/>
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="signup-password" placeholder="Use at least 8 characters"/>
+            </div>
+            <button class="btn btn-primary" onclick="signupUser(this)">
+              <span>Create Account</span>
+            </button>
+            <div class="auth-note">Account creation will call the new FastAPI auth routes in Step 7.</div>
+          </div>
+        </div>
+
+        <div class="card auth-hero">
+          <div>
+            <div class="card-title"><span class="card-title-icon">◬</span> Why log in?</div>
+            <div class="auth-feature">
+              <div class="auth-feature-title">Private memory per person</div>
+              <div class="auth-feature-copy">Your skills, projects, applications, resume notes, and chat history stay separated from everyone else.</div>
+            </div>
+            <div class="auth-feature">
+              <div class="auth-feature-title">Resume and pipeline continuity</div>
+              <div class="auth-feature-copy">Come back later and keep building on the same history instead of starting from scratch.</div>
+            </div>
+            <div class="auth-feature">
+              <div class="auth-feature-title">Protected workspace</div>
+              <div class="auth-feature-copy">All career features stay locked until you authenticate, which prevents accidental cross-user access.</div>
+            </div>
+          </div>
+          <div class="auth-note">The UI is ready. Session restoration and real submit behavior are next.</div>
+        </div>
+      </div>
+    </div>
 
     <!-- ── DASHBOARD ── -->
-    <div class="panel active" id="panel-dashboard">
+    <div class="panel" id="panel-dashboard">
       <div class="page-header">
         <div class="page-title">Your Career <span>Dashboard</span></div>
         <div class="page-desc">AI-powered overview — everything your advisor remembers about you.</div>
       </div>
+      <div class="gate-banner hidden" data-auth-warning>Please log in to access your personal dashboard and saved memory.</div>
 
       <div class="grid-2" style="margin-bottom:24px">
         <div class="dashboard-card" style="cursor:pointer" onclick="navigate('skills')">
@@ -543,6 +769,7 @@
         <div class="page-title">Skills <span>Tracker</span></div>
         <div class="page-desc">Log your skills. Your advisor remembers and tracks your growth over time.</div>
       </div>
+      <div class="gate-banner hidden" data-auth-warning>Please log in to track and review your own skills.</div>
 
       <div class="grid-2">
         <div class="card">
@@ -588,6 +815,7 @@
         <div class="page-title">Project <span>Portfolio</span></div>
         <div class="page-desc">Every project you build strengthens your career memory.</div>
       </div>
+      <div class="gate-banner hidden" data-auth-warning>Please log in to save and summarize your own projects.</div>
 
       <div class="grid-2">
         <div class="card">
@@ -633,6 +861,7 @@
         <div class="page-title">Application <span>Tracker</span></div>
         <div class="page-desc">Track every application. Your advisor spots patterns you miss.</div>
       </div>
+      <div class="gate-banner hidden" data-auth-warning>Please log in to manage your application pipeline.</div>
 
       <div class="grid-2">
         <div class="card">
@@ -687,6 +916,7 @@
         <div class="page-title">Resume <span>Analysis</span></div>
         <div class="page-desc">Paste your resume. Your advisor cross-references it with everything it knows about you.</div>
       </div>
+      <div class="gate-banner hidden" data-auth-warning>Please log in to analyze your resume against your saved history.</div>
 
       <div class="card">
         <div class="card-title"><span class="card-title-icon">◷</span> Resume + Skill Gap Analysis</div>
@@ -720,6 +950,7 @@
         <div class="page-title">AI <span>Advisor</span></div>
         <div class="page-desc">Ask anything. Your advisor knows your full career history.</div>
       </div>
+      <div class="gate-banner hidden" data-auth-warning>Please log in to open your personal advisor chat.</div>
 
       <div class="card">
         <div class="card-title"><span class="card-title-icon">◬</span> Memory-Aware Career Chat</div>
@@ -746,8 +977,20 @@
 <div class="toast-container" id="toasts"></div>
 
 <script>
+const authState = {
+  authenticated: false,
+  user: null,
+};
+
 // ── Navigation ──────────────────────────────────────────
 function navigate(panel) {
+  const navTarget = document.querySelector(`.nav-item[data-panel="${panel}"]`);
+  if (navTarget?.dataset.requiresAuth === 'true' && !authState.authenticated) {
+    navigate('auth');
+    toast('Log in or create an account to unlock your workspace.', 'error');
+    return;
+  }
+
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', el.dataset.panel === panel);
   });
@@ -759,6 +1002,134 @@ function navigate(panel) {
 document.querySelectorAll('.nav-item').forEach(el => {
   el.addEventListener('click', () => navigate(el.dataset.panel));
 });
+
+function showAuthPanel(panel) {
+  document.querySelectorAll('.auth-tab').forEach(el => {
+    el.classList.toggle('active', el.id === `tab-${panel}`);
+  });
+  document.querySelectorAll('.auth-panel').forEach(el => {
+    el.classList.toggle('active', el.id === `auth-panel-${panel}`);
+  });
+}
+
+function setAuthUi() {
+  const statusText = document.getElementById('auth-status-text');
+  const logoutBtn = document.getElementById('logout-btn');
+  const warnings = document.querySelectorAll('[data-auth-warning]');
+
+  if (authState.authenticated && authState.user) {
+    statusText.textContent = `Logged in as ${authState.user.name}`;
+    logoutBtn.classList.remove('hidden');
+    warnings.forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-item[data-requires-auth="true"]').forEach(el => {
+      el.classList.remove('locked');
+    });
+    return;
+  }
+
+  statusText.textContent = 'Not logged in';
+  logoutBtn.classList.add('hidden');
+  warnings.forEach(el => el.classList.remove('hidden'));
+  document.querySelectorAll('.nav-item[data-requires-auth="true"]').forEach(el => {
+    el.classList.add('locked');
+  });
+}
+
+function ensureAuthenticated() {
+  if (authState.authenticated) return true;
+  navigate('auth');
+  toast('You need to log in before using this section.', 'error');
+  return false;
+}
+
+function updateAuthState(user) {
+  authState.authenticated = Boolean(user);
+  authState.user = user || null;
+  setAuthUi();
+}
+
+function clearAuthForms() {
+  ['login-email', 'login-password', 'signup-name', 'signup-email', 'signup-password'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.value = '';
+  });
+}
+
+function resetChatWindow() {
+  const chatWindow = document.getElementById('chat-window');
+  chatWindow.innerHTML = `
+    <div class="chat-msg agent">
+      <div class="chat-avatar">⬡</div>
+      <div class="chat-bubble">Hey! I'm your AI career advisor — and unlike a generic chatbot, I actually remember your skills, projects, and applications. Ask me anything: "What should I focus on?", "Which skills am I missing for a data role?", "How's my interview pipeline looking?" — I'll answer based on what I know about you.</div>
+    </div>
+  `;
+}
+
+function handleUnauthorized(message = 'Your session expired. Please log in again.') {
+  updateAuthState(null);
+  clearAuthForms();
+  resetChatWindow();
+  navigate('auth');
+  showAuthPanel('login');
+  toast(message, 'error');
+}
+
+async function loginUser(btn) {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+  if (!email || !password) {
+    toast('Enter your email and password.', 'error');
+    return;
+  }
+  setLoading(btn, true);
+  try {
+    const result = await api('/api/auth/login', 'POST', { email, password });
+    updateAuthState(result.user);
+    clearAuthForms();
+    navigate('dashboard');
+    toast(result.message || 'Logged in successfully.');
+  } catch (error) {
+    toast(error.message || 'Login failed.', 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function signupUser(btn) {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value.trim();
+  if (!name || !email || !password) {
+    toast('Fill in name, email, and password.', 'error');
+    return;
+  }
+  setLoading(btn, true);
+  try {
+    const result = await api('/api/auth/signup', 'POST', { name, email, password });
+    updateAuthState(result.user);
+    clearAuthForms();
+    navigate('dashboard');
+    toast(result.message || 'Account created successfully.');
+  } catch (error) {
+    toast(error.message || 'Signup failed.', 'error');
+  } finally {
+    setLoading(btn, false);
+  }
+}
+
+async function logoutUser() {
+  try {
+    const result = await api('/api/auth/logout', 'POST');
+    updateAuthState(null);
+    clearAuthForms();
+    resetChatWindow();
+    navigate('auth');
+    showAuthPanel('login');
+    toast(result.message || 'Logged out successfully.');
+  } catch (error) {
+    toast(error.message || 'Logout failed.', 'error');
+  }
+}
 
 // ── Toast ────────────────────────────────────────────────
 function toast(msg, type = 'success') {
@@ -788,16 +1159,49 @@ function showResponse(boxId, textId, text) {
 }
 
 // ── API helper ────────────────────────────────────────────
-async function api(path, method = 'GET', body = null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+async function api(path, method = 'GET', body = null, options = {}) {
+  const opts = {
+    method,
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(path, opts);
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
+  let payload = null;
+  try {
+    payload = await res.json();
+  } catch (_) {
+    payload = null;
+  }
+
+  if (res.status === 401) {
+    if (!options.quietUnauthorized) {
+      handleUnauthorized(payload?.detail || 'Please log in to continue.');
+    }
+    throw new Error(payload?.detail || 'Authentication required.');
+  }
+
+  if (!res.ok) {
+    throw new Error(payload?.detail || `API error ${res.status}`);
+  }
+  return payload;
+}
+
+async function restoreSession() {
+  try {
+    const result = await api('/api/auth/me', 'GET', null, { quietUnauthorized: true });
+    updateAuthState(result.user);
+    navigate('dashboard');
+  } catch (_) {
+    updateAuthState(null);
+    navigate('auth');
+    showAuthPanel('login');
+  }
 }
 
 // ── SKILLS ───────────────────────────────────────────────
 async function addSkill(btn) {
+  if (!ensureAuthenticated()) return;
   const name  = document.getElementById('skill-name').value.trim();
   const level = document.getElementById('skill-level').value;
   const notes = document.getElementById('skill-notes').value.trim();
@@ -813,6 +1217,7 @@ async function addSkill(btn) {
 }
 
 async function getSkillsSummary(btn) {
+  if (!ensureAuthenticated()) return;
   setLoading(btn, true);
   try {
     const r = await api('/api/skills/summary');
@@ -823,6 +1228,7 @@ async function getSkillsSummary(btn) {
 
 // ── PROJECTS ─────────────────────────────────────────────
 async function addProject(btn) {
+  if (!ensureAuthenticated()) return;
   const title = document.getElementById('proj-title').value.trim();
   const description = document.getElementById('proj-desc').value.trim();
   const tech_stack = document.getElementById('proj-tech').value.trim();
@@ -838,6 +1244,7 @@ async function addProject(btn) {
 }
 
 async function getProjectsSummary(btn) {
+  if (!ensureAuthenticated()) return;
   setLoading(btn, true);
   try {
     const r = await api('/api/projects/summary');
@@ -848,6 +1255,7 @@ async function getProjectsSummary(btn) {
 
 // ── APPLICATIONS ─────────────────────────────────────────
 async function addApplication(btn) {
+  if (!ensureAuthenticated()) return;
   const company = document.getElementById('app-company').value.trim();
   const role = document.getElementById('app-role').value.trim();
   const status = document.getElementById('app-status').value;
@@ -864,6 +1272,7 @@ async function addApplication(btn) {
 }
 
 async function getApplicationsSummary(btn) {
+  if (!ensureAuthenticated()) return;
   setLoading(btn, true);
   try {
     const r = await api('/api/applications/summary');
@@ -874,6 +1283,7 @@ async function getApplicationsSummary(btn) {
 
 // ── RESUME ───────────────────────────────────────────────
 async function analyzeResume(btn) {
+  if (!ensureAuthenticated()) return;
   const resume_text = document.getElementById('resume-text').value.trim();
   const target_role = document.getElementById('resume-role').value.trim();
   if (!resume_text) { toast('Paste your resume text first', 'error'); return; }
@@ -892,6 +1302,7 @@ async function analyzeResume(btn) {
 
 // ── DASHBOARD ────────────────────────────────────────────
 async function loadDashboard(btn) {
+  if (!ensureAuthenticated()) return;
   setLoading(btn, true);
   try {
     const r = await api('/api/dashboard');
@@ -902,6 +1313,7 @@ async function loadDashboard(btn) {
 
 // ── CHAT ─────────────────────────────────────────────────
 async function sendChat() {
+  if (!ensureAuthenticated()) return;
   const input = document.getElementById('chat-input');
   const msg = input.value.trim();
   if (!msg) return;
@@ -948,6 +1360,8 @@ function addTypingIndicator() {
 
 // Set today's date on date picker
 document.getElementById('app-date').valueAsDate = new Date();
+setAuthUi();
+restoreSession();
 </script>
 </body>
 </html>

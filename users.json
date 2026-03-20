@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": "f8055643-4d08-416d-b6bc-17c257530442",
+      "name": "Test User",
+      "email": "test@example.com",
+      "hashed_password": "$pbkdf2-sha256$29000$/7.3VupdK2XM2fv/fy/FeA$kyYfc5TBhlVPua46YS0RE4U6Iu7PvBz3ajvlwiNrqSs",
+      "created_at": "2026-03-20T16:53:06.716838Z"
+    },
+    {
+      "id": "626e0090-6da1-4174-96d5-e20e4da5378f",
+      "name": "Alice Isolation",
+      "email": "alice-356fb3b2@example.com",
+      "hashed_password": "hash-1",
+      "created_at": "2026-03-20T16:55:10.099782Z"
+    },
+    {
+      "id": "073397dc-d4b8-4275-bcc6-eba65d98c365",
+      "name": "Bob Isolation",
+      "email": "bob-7e8b7a25@example.com",
+      "hashed_password": "hash-2",
+      "created_at": "2026-03-20T16:55:10.106216Z"
+    }
+  ]
+}
